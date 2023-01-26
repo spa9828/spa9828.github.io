@@ -8,6 +8,27 @@ function hm(i) {
 function wm(i) {
     return Math.ceil((canvas.width / 1000) * i)
 }
+function getMousePosition(e) {
+    const rect = canvas.getBoundingClientRect()
+    return [
+        ((e.clientX - rect.left) / (rect.right - rect.left) * canvas.width) - wm(500),
+        ((e.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height) - hm(300)
+    ]
+}
+const locations = []
+function react(e) {
+    for (let location of locations) {
+        let name
+        if (name = location(e)) {
+            document.getElementById("object").innerHTML = name
+            setTimeout(100, () => document.addEventListener(react))
+            return
+        }
+    }
+    document.getElementById("object").innerHTML = ""
+    setTimeout(10, () => document.addEventListener(react))
+}
+document.addEventListener("mousemove", react)
 function draw() {
     let background = document.getElementById("back");
     canvas = document.getElementById("canvas");
@@ -15,7 +36,7 @@ function draw() {
     ctx.translate(wm(500), hm(300));
     for (let depth = 20; depth >= 1; depth--) {
         let multiplier = depth / 20;
-        let down = hm(500) * ( 1 -multiplier)
+        let down = hm(500) * ( 1 - multiplier)
         ctx.fillStyle = (depth % 2 == 0 ? "rgb(54, 40, 13)" : "grey");
         for (let side of [-1, 1]) {
             ctx.beginPath();
@@ -26,6 +47,16 @@ function draw() {
             ctx.fill();
         }
     }
+    locations.push((e) => {
+        [x, y] = getMousePosition(e)
+        if (x < wm(-50) && y < hm(500) && x + y > wm(-75) + hm(-50)) {
+            return "Base"
+        }
+        if (-x < wm(-50) && y < hm(500) && -x + y > wm(-75) + hm(-50)) {
+            return "Base"
+        }
+        return ""
+    })
     ctx.fillStyle = "#ffffff";
     ctx.beginPath()
     ctx.moveTo(wm(50), hm(0))
