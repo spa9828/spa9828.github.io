@@ -118,7 +118,7 @@ function draw() {
         }
         requestAnimationFrame(lavaUp)
         canvas.addEventListener("contextmenu", download)
-        let ii = 0;
+        let time = 0;
         let bombs = [], ashes = [];
         function drawLava() {
             ctx.beginPath()
@@ -134,16 +134,12 @@ function draw() {
             ctx.fill();
         }
         function drawLavaFlow() {
-            if (ii > 2) {
-                ii = 1.999;
-            }
-            if (ii <= 1) {
+            if (time <= 1) {
                 let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
                 grad.addColorStop(1, "rgba(255, 255, 255, 0)")
                 grad.addColorStop(0, "red")
-                grad.addColorStop(ii, "red")
-                grad.addColorStop(ii, "rgba(255, 255, 255, 0)")
-                ii += 0.001;
+                grad.addColorStop(time, "red")
+                grad.addColorStop(time, "rgba(255, 255, 255, 0)")
                 ctx.beginPath();
                 ctx.moveTo(wm(-500), hm(500));
                 ctx.lineTo(wm(-100), 0);
@@ -157,14 +153,12 @@ function draw() {
                 ctx.lineTo(wm(-500), hm(490));
                 ctx.fillStyle = grad;
                 ctx.fill();
-                //ctx.addHitRegion({id: "LavaFlow"});
             } else {
                 let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
                 grad.addColorStop(0, "red")
-                grad.addColorStop(Math.max(0, 1 - (3 * (ii - 1))), "red")
-                grad.addColorStop(1 - (ii - 1), "darkGrey")
+                grad.addColorStop(Math.max(Number.EPSILON, 1 - (3 * (time - 1))), "red")
+                grad.addColorStop(1 - Math.min(1-Number.EPSILON, time - 1), "darkGrey")
                 grad.addColorStop(1, "darkGrey")
-                ii += 0.001;
                 ctx.beginPath();
                 ctx.moveTo(wm(-500), hm(500));
                 ctx.lineTo(wm(-100), 0);
@@ -178,20 +172,14 @@ function draw() {
                 ctx.lineTo(wm(-500), hm(490));
                 ctx.fillStyle = grad;
                 ctx.fill();
-                //ctx.addHitRegion({id: "LavaFlow"});
             }
         }
-        let iiiii = 0
         function drawPyroclasticFlow() {
-            if (iiiii > 0.5) {
-                iiiii = 0.499999;
-            }
             let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
             grad.addColorStop(1, "rgba(255, 255, 255, 0)")
             grad.addColorStop(0, "rgba(0, 0, 0, 0.75)")
-            grad.addColorStop(iiiii * 1.5, "rgba(0, 0, 0, 0.75)")
-            grad.addColorStop(Math.min(1, iiiii * 4), "rgba(255, 255, 255, 0)")
-            iiiii += 0.001;
+            grad.addColorStop(Math.min(1-Number.EPSILON, time * 1.5), "rgba(0, 0, 0, 0.75)")
+            grad.addColorStop(Math.min(1-Number.EPSILON, time * 4), "rgba(255, 255, 255, 0)")
             ctx.beginPath();
             ctx.moveTo(wm(-500), hm(500));
             ctx.lineTo(wm(-100), 0);
@@ -207,7 +195,7 @@ function draw() {
             ctx.fill();
         }
         function drawGas() {
-            if (ii < 1.8) {
+            if (time < 1.8) {
                 ashes.push(new Ash())
                 ctx.fillStyle = "darkGrey";
                 for (let ash of ashes) {
@@ -222,7 +210,7 @@ function draw() {
             }
         }
         function drawBombs() {
-            if (ii < 1.8) {
+            if (time < 1.8) {
                 ctx.fillStyle = "rgb(210, 188, 188)";
                 ctx.beginPath()
                 for (let bomb of bombs) {
@@ -242,18 +230,10 @@ function draw() {
                 }
             }
         }
-        let iii = 0;
-        let iiii = 0;
         function drawAsh() {
-            if (iii >= 0.999) {
-                iii = 0.99;
-            }
-            if (iiii >= 0.999) {
-                iiii = 0.99;
-            }
             let grad = ctx.createRadialGradient(wm(10), hm(-200), hm(15), wm(300), hm(-200), hm(150));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(iii, `rgba(117, 117, 117, ${iiii})`);
+            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(-10), hm(-200));
@@ -262,7 +242,7 @@ function draw() {
             ctx.fill();
             grad = ctx.createRadialGradient(wm(-10), hm(-200), hm(15), wm(-300), hm(-200), hm(150));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(iii, `rgba(117, 117, 117, ${iiii})`);
+            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(10), hm(-200));
@@ -271,27 +251,28 @@ function draw() {
             ctx.fill();
             grad = ctx.createRadialGradient(wm(0), hm(-200), hm(15), wm(0), hm(-200), wm(100));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(iii, `rgba(117, 117, 117, ${iiii})`);
+            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(-150), hm(-200));
             ctx.quadraticCurveTo(wm(0), hm(-300), wm(150), hm(-200));
             ctx.quadraticCurveTo(wm(0), hm(-50), wm(-150), hm(-200));
             ctx.fill();
-            iii += 0.001;
-            iiii += 0.005;
         }
         function draw(a = true) {
             if (a) {
                 ctx.clearRect(wm(-500), hm(-300), wm(1000), hm(1000))
             }
+            time += 0.001
             drawGas();
             drawPyroclasticFlow();
             drawLava();
             drawLavaFlow();
             drawBombs();
             drawAsh();
-            requestAnimationFrame(draw)
+            if (time < 2) {
+                requestAnimationFrame(draw)
+            }
         }
     }, { once: true })
 }
