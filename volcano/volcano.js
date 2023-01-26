@@ -2,12 +2,10 @@ function random(min, max) {
     return min + (Math.floor(Math.random() * (1 + max - min)))
 }
 var canvas, ctx, background;
-let multiplier = 1;
 function hm(i) {
     return Math.ceil((canvas.height / 1000) * i);
 }
 function wm(i) {
-    i *= multiplier;
     return Math.ceil((canvas.width / 1000) * i)
 }
 function draw() {
@@ -15,19 +13,19 @@ function draw() {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
     ctx.translate(wm(500), hm(300));
-    for (let depth = 10; depth >= 1; depth--) {
-        multiplier = depth / 10;
+    for (let depth = 20; depth >= 1; depth--) {
+        let multiplier = depth / 20;
+        let down = hm(500) * ( 1 -multiplier)
         ctx.fillStyle = (depth % 2 == 0 ? "rgb(54, 40, 13)" : "grey");
         for (let side of [-1, 1]) {
             ctx.beginPath();
-            ctx.moveTo(side * wm(-500), hm(500));
-            ctx.lineTo(side * wm(-100), 0);
-            ctx.bezierCurveTo(side * wm(-75), hm(-50), side * wm(-50), hm(-50), side * wm(-50), 0)
+            ctx.moveTo(side * multiplier * wm(-500), hm(500));
+            ctx.lineTo(side * wm(-100), down);
+            ctx.bezierCurveTo(side * wm(-75), hm(-50) + down, side * wm(-50), hm(-50) + down, side * wm(-50), down)
             ctx.lineTo(side * wm(-50), hm(500));
             ctx.fill();
         }
     }
-    multiplier = 1
     ctx.fillStyle = "#ffffff";
     ctx.beginPath()
     ctx.moveTo(wm(50), hm(0))
