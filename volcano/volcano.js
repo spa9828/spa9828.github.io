@@ -16,19 +16,20 @@ function getMousePosition(e) {
     ]
 }
 const locations = []
-function react(e) {
+async function react(e) {
     for (let location of locations) {
         let name
         if (name = location(e)) {
             document.getElementById("object").innerHTML = name
-            setTimeout(100, () => document.addEventListener(react))
+            await new Promise(r => setTimeout(r, 300))
+            document.addEventListener("mousemove", react, {once: true})
             return
         }
     }
     document.getElementById("object").innerHTML = ""
-    setTimeout(10, () => document.addEventListener(react))
+    document.addEventListener("mousemove", react, {once: true})
 }
-document.addEventListener("mousemove", react)
+document.addEventListener("mousemove", react, {once: true})
 function draw() {
     let background = document.getElementById("back");
     canvas = document.getElementById("canvas");
@@ -38,7 +39,7 @@ function draw() {
         let multiplier = depth / 20;
         let down = hm(500) * ( 1 - multiplier)
         ctx.fillStyle = (depth % 2 == 0 ? "rgb(54, 40, 13)" : "grey");
-        for (let side of [-1, 1]) {
+        for (let side = -1; side < 2; side += 2) {
             ctx.beginPath();
             ctx.moveTo(side * multiplier * wm(-500), hm(500));
             ctx.lineTo(side * wm(-100), down);
@@ -47,13 +48,14 @@ function draw() {
             ctx.fill();
         }
     }
+    let gradient = (hm(-50) - hm(500)) / (wm(-500) - wm(-75))
+    console.log(gradient)
     locations.push((e) => {
         [x, y] = getMousePosition(e)
-        if (x < wm(-50) && y < hm(500) && x + y > wm(-75) + hm(-50)) {
-            return "Base"
-        }
-        if (-x < wm(-50) && y < hm(500) && -x + y > wm(-75) + hm(-50)) {
-            return "Base"
+        for (let side = -1; side < 2; side += 2) {
+            if (side * x < wm(-50) && y < hm(500) && (side * gradient * x) + y > (gradient * wm(-75)) + hm(-50)) {
+                return "Base"
+            }
         }
         return ""
     })
@@ -62,14 +64,26 @@ function draw() {
     ctx.moveTo(wm(50), hm(0))
     ctx.bezierCurveTo(wm(100), hm(-100), wm(-100), hm(-100), wm(-50), hm(0))
     ctx.fill();
+    locations.unshift((e) => {
+        [x, y] = getMousePosition(e)
+        if (y > hm(-50) && (x - wm(0)) ** 2 + (y - hm(20)) ** 2 < wm(70) ** 2) {
+            return "Crator"
+        }
+        return ""
+    })
 
-    //ctx.addHitRegion({id: "Crator"})
     ctx.fillStyle = "red";
     ctx.beginPath();
     ctx.moveTo(wm(-50), hm(500));
     ctx.bezierCurveTo(wm(-200), hm(700), wm(200), hm(700), wm(50), hm(500))
     ctx.fill();
-    //ctx.addHitRegion({id: "MagmaChamber"})
+    locations.push((e) => {
+        [x, y] = getMousePosition(e)
+        if (x ** 2 + (y - hm(600)) ** 2 < wm(100) ** 2) {
+            return "Magma Chamber"
+        }
+        return ""
+    })
     ctx.fillStyle = "rgb(255,255,255)";
     ctx.beginPath();
     ctx.moveTo(wm(-50), hm(500));
@@ -77,14 +91,28 @@ function draw() {
     ctx.lineTo(wm(50), hm(0))
     ctx.lineTo(wm(-50), hm(0))
     ctx.fill();
-    //ctx.addHitRegion({id: "MainVent"})
+    locations.unshift((e) => {
+        [x, y] = getMousePosition(e)
+        if (Math.abs(x) < wm(50) && y > hm(0) && y < hm(500)) {
+            return "Main Vent"
+        }
+        return ""
+    })
     ctx.beginPath();
     ctx.moveTo(wm(50), hm(180))
     ctx.lineTo(wm(50), hm(250))
     ctx.lineTo(wm(180), hm(100))
     ctx.lineTo(wm(150), hm(60))
     ctx.fill()
-    //ctx.addHitRegion({id: "SecondaryVent"})
+    let grad2 = (hm(250) - hm(100)) / (wm(50) - wm(180))
+    let grad3 = (hm(180) - hm(60)) / (wm(50) - wm(150))
+    locations.unshift((e) => {
+        [x, y] = getMousePosition(e)
+        if (x > wm(50) && (gradient * -x) + y > (gradient * wm(-75)) + hm(-50) && (grad2 * -x) + y < (grad2 * -wm(50)) + hm(250) && (grad3 * -x) + y > (grad3 * -wm(50)) + hm(180)) {
+            return "Secondary Vent"
+        }
+        return ""
+    })
     canvas.addEventListener("click", () => {
         background.style.backgroundImage = `url(${canvas.toDataURL()})`;
         ctx.clearRect(wm(-500), hm(-300), wm(1000), hm(1000))
@@ -97,7 +125,7 @@ function draw() {
         ctx.lineTo(wm(180), hm(100))
         ctx.lineTo(wm(50), hm(250))
         ctx.lineTo(wm(50), hm(500))
-        let i = 0.01;
+        let lavaHeight = 0.01;
         function download(event) {
             event.preventDefault();
             let img = new Image();
@@ -130,13 +158,13 @@ function draw() {
         function lavaUp() {
             let grad = ctx.createLinearGradient(wm(0), hm(500), wm(0), hm(0))
             grad.addColorStop(0, "red");
-            grad.addColorStop(i, "red");
-            grad.addColorStop(i, "rgba(255,255,255,0)");
+            grad.addColorStop(lavaHeight, "red");
+            grad.addColorStop(lavaHeight, "rgba(255,255,255,0)");
             grad.addColorStop(1, "rgba(255,255,255,0)");
             ctx.fillStyle = grad;
             ctx.fill();
-            i += 0.005
-            if (i < 1) {
+            lavaHeight += 0.005
+            if (lavaHeight < 1) {
                 requestAnimationFrame(lavaUp)
             } else {
                 canvas.removeEventListener("contextmenu", download)
@@ -245,10 +273,12 @@ function draw() {
                 ctx.fillStyle = "rgb(210, 188, 188)";
                 ctx.beginPath()
                 for (let bomb of bombs) {
-                    bomb.x += bomb.vx;
-                    bomb.y += bomb.vy;
+                    if (Math.floor(time * 1000) % 2 == 0) {
+                        bomb.x += bomb.vx;
+                        bomb.y += bomb.vy;
+                        bomb.vy += hm(0.5);
+                    }
                     ctx.rect(bomb.x, bomb.y, bomb.radius, bomb.radius);
-                    bomb.vy += hm(0.5);
                 }
                 ctx.fill();
                 ctx.fillStyle = "rgba(255, 255, 255, 0)";
@@ -261,6 +291,15 @@ function draw() {
                 }
             }
         }
+        locations.unshift((e) => {
+            [x, y] = getMousePosition(e);
+            for (let bomb of bombs) {
+                if ((x - bomb.x) ** 2 + (y - bomb.y) ** 2 < 5 * bomb.radius ** 2) {
+                    return "Volcanic Bomb"
+                }
+                return ""
+            }
+        })
         function drawAsh() {
             let grad = ctx.createRadialGradient(wm(10), hm(-200), hm(15), wm(300), hm(-200), hm(150));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
