@@ -194,7 +194,7 @@ function draw() {
         }
         function drawLavaFlow() {
             if (time <= 1) {
-                let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
+                let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
                 grad.addColorStop(1, "rgba(255, 255, 255, 0)")
                 grad.addColorStop(0, "red")
                 grad.addColorStop(time, "red")
@@ -213,7 +213,7 @@ function draw() {
                 ctx.fillStyle = grad;
                 ctx.fill();
             } else {
-                let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
+                let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
                 grad.addColorStop(0, "red")
                 grad.addColorStop(Math.max(Number.EPSILON, 1 - (3 * (time - 1))), "red")
                 grad.addColorStop(1 - Math.min(1-Number.EPSILON, time - 1), "darkGrey")
@@ -233,8 +233,20 @@ function draw() {
                 ctx.fill();
             }
         }
+        locations.push((e) => {
+            [x, y] = getMousePosition(e)
+            let isAbove = gradient*x + y < gradient * wm(-75) + hm(-50) || -gradient*x + y < gradient * wm(-75) + hm(-50) || y < hm(-50)
+            let newGrad = (hm(-80) - hm(490)) / (wm(-70) - wm(-500))
+            let isBelow = newGrad * x + y > newGrad * -wm(-70) + hm(-80) && -newGrad * x + y > newGrad * -wm(-70) + hm(-80) && y > hm(-80)
+            let dist = (wm(500) ** 2 + hm(500) ** 2) * (Math.min(1, time) ** 2)
+            let isLava = x ** 2 + y ** 2 < dist
+            if (isAbove && isBelow && isLava) {
+                return "Lava"
+            }
+            return ""
+        })
         function drawPyroclasticFlow() {
-            let grad = ctx.createRadialGradient(wm(0), hm(0), wm(1), wm(0), hm(0), wm(700))
+            let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
             grad.addColorStop(1, "rgba(255, 255, 255, 0)")
             grad.addColorStop(0, "rgba(0, 0, 0, 0.75)")
             grad.addColorStop(Math.min(1-Number.EPSILON, time * 1.5), "rgba(0, 0, 0, 0.75)")
@@ -253,6 +265,18 @@ function draw() {
             ctx.fillStyle = grad;
             ctx.fill();
         }
+        locations.push((e) => {
+            [x, y] = getMousePosition(e)
+            let isAbove = gradient*x + y < gradient * wm(-75) + hm(-50) || -gradient*x + y < gradient * wm(-75) + hm(-50) || y < hm(-50)
+            let newGrad = (hm(-100) - hm(400)) / (wm(-100) - wm(-500))
+            let isBelow = newGrad * x + y > newGrad * -wm(-100) + hm(-100) && -newGrad * x + y > newGrad * -wm(-100) + hm(-100) && y > hm(-100)
+            let dist = (wm(500) ** 2 + hm(500) ** 2) * (Math.min(1, time * 4) ** 2)
+            let isLava = x ** 2 + y ** 2 < dist
+            if (isAbove && isBelow && isLava) {
+                return "Pyroclastic Flow"
+            }
+            return ""
+        })
         function drawGas() {
             if (time < 1.8) {
                 ashes.push(new Ash())
@@ -294,7 +318,7 @@ function draw() {
         locations.unshift((e) => {
             [x, y] = getMousePosition(e);
             for (let bomb of bombs) {
-                if ((x - bomb.x) ** 2 + (y - bomb.y) ** 2 < 5 * bomb.radius ** 2) {
+                if ((x - bomb.x) ** 2 + (y - bomb.y) ** 2 < 2 * bomb.radius ** 2) {
                     return "Volcanic Bomb"
                 }
                 return ""
@@ -329,6 +353,13 @@ function draw() {
             ctx.quadraticCurveTo(wm(0), hm(-50), wm(-150), hm(-200));
             ctx.fill();
         }
+        locations.push((e) => {
+            [x, y] = getMousePosition(e)
+            if (y < hm(-100) && Math.abs(x) < wm(250) && time > 0) {
+                return "Ash Cloud"
+            }
+            return ""
+        })
         function draw(a = true) {
             if (a) {
                 ctx.clearRect(wm(-500), hm(-300), wm(1000), hm(1000))
