@@ -17,13 +17,16 @@ function getMousePosition(e) {
 }
 const locations = []
 async function react(e) {
-    for (let location of locations) {
-        let name
-        if (name = location(e)) {
-            document.getElementById("object").innerHTML = name
-            await new Promise(r => setTimeout(r, 300))
-            document.addEventListener("mousemove", react, {once: true})
-            return
+    [x, y] = getMousePosition(e)
+    if (x < wm(500)) {
+        for (let location of locations) {
+            let name
+            if (name = location(e)) {
+                document.getElementById("object").innerHTML = name
+                await new Promise(r => setTimeout(r, 200))
+                document.addEventListener("mousemove", react, {once: true})
+                return
+            }
         }
     }
     document.getElementById("object").innerHTML = ""
@@ -33,6 +36,8 @@ document.addEventListener("mousemove", react, {once: true})
 function draw() {
     let background = document.getElementById("back");
     canvas = document.getElementById("canvas");
+    canvas.height = window.innerHeight
+    canvas.width = window.innerWidth / 2
     ctx = canvas.getContext("2d");
     ctx.translate(wm(500), hm(300));
     for (let depth = 20; depth >= 1; depth--) {
@@ -49,7 +54,6 @@ function draw() {
         }
     }
     let gradient = (hm(-50) - hm(500)) / (wm(-500) - wm(-75))
-    console.log(gradient)
     locations.push((e) => {
         [x, y] = getMousePosition(e)
         for (let side = -1; side < 2; side += 2) {
@@ -167,17 +171,40 @@ function draw() {
             if (lavaHeight < 1) {
                 requestAnimationFrame(lavaUp)
             } else {
+                {
+                    let ranges = document.getElementById("ranges")
+                    ranges.style.visibility = "visible"
+                }
+                {
+                    let speedRange = document.getElementById("speedRange")
+                    let speedDisplay = document.getElementById("speed")
+                    speedRange.addEventListener("input", (e) => {
+                        speed = 10 ** speedRange.value
+                        speedDisplay.innerHTML = Math.round(speed * 100) / 100
+                    })
+                }
+                
+                timeRange.addEventListener("input", (e) => {
+                    time = timeRange.value
+                    timeDisplay.innerHTML = time
+                })
+                
                 canvas.removeEventListener("contextmenu", download)
                 requestAnimationFrame(draw)
                 canvas.addEventListener("contextmenu", downloader)
-                setInterval(() => {
-                    bombs.push(new VolcanicBombs());
-                }, 200)
+                function addBomb() {
+                    bombs.push(new VolcanicBomb())
+                    setTimeout(addBomb, 200 / speed)
+                }
+                setTimeout(addBomb, 200)
             }
         }
+        let speed = 1
+        let timeDisplay = document.getElementById("time")
         requestAnimationFrame(lavaUp)
         canvas.addEventListener("contextmenu", download)
         let time = 0;
+        let timeRange = document.getElementById("timeRange")
         let bombs = [], ashes = [];
         function drawLava() {
             ctx.beginPath()
@@ -197,8 +224,10 @@ function draw() {
                 let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
                 grad.addColorStop(1, "rgba(255, 255, 255, 0)")
                 grad.addColorStop(0, "red")
-                grad.addColorStop(time, "red")
-                grad.addColorStop(time, "rgba(255, 255, 255, 0)")
+                try {
+                    grad.addColorStop(time, "red")
+                    grad.addColorStop(time, "rgba(255, 255, 255, 0)")
+                } catch {}
                 ctx.beginPath();
                 ctx.moveTo(wm(-500), hm(500));
                 ctx.lineTo(wm(-100), 0);
@@ -215,8 +244,10 @@ function draw() {
             } else {
                 let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
                 grad.addColorStop(0, "red")
-                grad.addColorStop(Math.max(Number.EPSILON, 1 - (3 * (time - 1))), "red")
-                grad.addColorStop(1 - Math.min(1-Number.EPSILON, time - 1), "darkGrey")
+                try {
+                    grad.addColorStop(Math.max(Number.EPSILON, 1 - (3 * (time - 1))), "red")
+                    grad.addColorStop(1 - Math.min(1-Number.EPSILON, time - 1), "darkGrey")
+                } catch {}
                 grad.addColorStop(1, "darkGrey")
                 ctx.beginPath();
                 ctx.moveTo(wm(-500), hm(500));
@@ -249,8 +280,10 @@ function draw() {
             let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, (wm(500) ** 2 + hm(500) ** 2) ** 0.5)
             grad.addColorStop(1, "rgba(255, 255, 255, 0)")
             grad.addColorStop(0, "rgba(0, 0, 0, 0.75)")
-            grad.addColorStop(Math.min(1-Number.EPSILON, time * 1.5), "rgba(0, 0, 0, 0.75)")
-            grad.addColorStop(Math.min(1-Number.EPSILON, time * 4), "rgba(255, 255, 255, 0)")
+            try {
+                grad.addColorStop(Math.min(1-Number.EPSILON, time * 1.5), "rgba(0, 0, 0, 0.75)")
+                grad.addColorStop(Math.min(1-Number.EPSILON, time * 4), "rgba(255, 255, 255, 0)")
+            } catch {}
             ctx.beginPath();
             ctx.moveTo(wm(-500), hm(500));
             ctx.lineTo(wm(-100), 0);
@@ -277,15 +310,21 @@ function draw() {
             }
             return ""
         })
+        let attempts = 0
         function drawGas() {
             if (time < 1.8) {
                 ashes.push(new Ash())
                 ctx.fillStyle = "darkGrey";
                 for (let ash of ashes) {
-                    ash.x += ash.vx;
-                    ash.y += ash.vy;
+                    ash.x += ash.vx * speed;
+                    ash.y += ash.vy * speed;
                     ctx.fillRect(ash.x, ash.y, ash.radius, ash.radius);
-                    ash.vy -= hm(1);
+                    ash.vy -= hm(10) * speed;
+                }
+                period = Math.max(1, 1 / speed)
+                if (++attempts >= period) {
+                    attempts -= period
+                    return
                 }
                 if (ashes.length >= 10) {
                     ashes.shift();
@@ -293,14 +332,15 @@ function draw() {
             }
         }
         function drawBombs() {
+            console.log(bombs)
             if (time < 1.8) {
                 ctx.fillStyle = "rgb(210, 188, 188)";
                 ctx.beginPath()
                 for (let bomb of bombs) {
                     if (Math.floor(time * 1000) % 2 == 0) {
-                        bomb.x += bomb.vx;
-                        bomb.y += bomb.vy;
-                        bomb.vy += hm(0.5);
+                        bomb.x += bomb.vx * speed;
+                        bomb.y += bomb.vy * speed;
+                        bomb.vy += hm(4) * speed;
                     }
                     ctx.rect(bomb.x, bomb.y, bomb.radius, bomb.radius);
                 }
@@ -327,7 +367,9 @@ function draw() {
         function drawAsh() {
             let grad = ctx.createRadialGradient(wm(10), hm(-200), hm(15), wm(300), hm(-200), hm(150));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
+            try {
+                grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
+            } catch {}
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(-10), hm(-200));
@@ -336,7 +378,9 @@ function draw() {
             ctx.fill();
             grad = ctx.createRadialGradient(wm(-10), hm(-200), hm(15), wm(-300), hm(-200), hm(150));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
+            try {
+                grad.addColorStop(Math.min(1 - Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1 - Number.EPSILON, time)})`);
+            } catch {}
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(10), hm(-200));
@@ -345,7 +389,9 @@ function draw() {
             ctx.fill();
             grad = ctx.createRadialGradient(wm(0), hm(-200), hm(15), wm(0), hm(-200), wm(100));
             grad.addColorStop(1, "rgba(117, 117, 117, 0)");
-            grad.addColorStop(Math.min(1-Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1-Number.EPSILON, time)})`);
+            try {
+                grad.addColorStop(Math.min(1 - Number.EPSILON, time), `rgba(117, 117, 117, ${Math.min(1 - Number.EPSILON, time)})`);
+            } catch {}
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(wm(-150), hm(-200));
@@ -364,33 +410,38 @@ function draw() {
             if (a) {
                 ctx.clearRect(wm(-500), hm(-300), wm(1000), hm(1000))
             }
-            time += 0.001
+            time = Math.min(2, time + 0.001 * speed)
+            if (isNaN(time)) {
+                time = +timeDisplay.innerHTML
+                requestAnimationFrame(draw)
+                return
+            }
+            timeRange.value = time
+            timeDisplay.innerHTML = Math.round(time * 1000) / 1000
             drawGas();
             drawPyroclasticFlow();
             drawLava();
             drawLavaFlow();
             drawBombs();
             drawAsh();
-            if (time < 2) {
-                requestAnimationFrame(draw)
-            }
+            requestAnimationFrame(draw)
         }
     }, { once: true })
 }
 class Ash {
     constructor() {
         this.vx = random(0, 1) ? random(wm(3), wm(10)) : -random(wm(3), wm(10));
-        this.vy = random(hm(1), hm(10))
+        this.vy = random(hm(0), hm(4))
         this.radius = random(wm(10), wm(30))
         this.x = 0;
         this.y = 0;
     }
 }
-class VolcanicBombs {
+class VolcanicBomb {
     constructor() {
-        this.vx = random(0, 1) ? random(wm(20), wm(40)) : -random(wm(20), wm(40));
-        this.vy = -random(hm(40), hm(70))
-        this.radius = random(wm(40), wm(80))
+        this.vx = random(0, 1) ? random(wm(15), wm(30)) : -random(wm(15), wm(30));
+        this.vy = -random(hm(30), hm(55))
+        this.radius = random(wm(55), wm(90))
         this.x = 0;
         this.y = 0;
     }
