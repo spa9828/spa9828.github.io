@@ -162,8 +162,8 @@ function draw() {
         function lavaUp() {
             let grad = ctx.createLinearGradient(wm(0), hm(500), wm(0), hm(0))
             grad.addColorStop(0, "red");
-            grad.addColorStop(lavaHeight, "red");
-            grad.addColorStop(lavaHeight, "rgba(255,255,255,0)");
+            grad.addColorStop(Math.min(1 - Number.EPSILON, lavaHeight), "red");
+            grad.addColorStop(Math.min(1 - Number.EPSILON, lavaHeight), "rgba(255,255,255,0)");
             grad.addColorStop(1, "rgba(255,255,255,0)");
             ctx.fillStyle = grad;
             ctx.fill();
@@ -332,7 +332,6 @@ function draw() {
             }
         }
         function drawBombs() {
-            console.log(bombs)
             if (time < 1.8) {
                 ctx.fillStyle = "rgb(210, 188, 188)";
                 ctx.beginPath()
