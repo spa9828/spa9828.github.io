@@ -37,7 +37,7 @@ function draw() {
     let background = document.getElementById("back");
     canvas = document.getElementById("canvas");
     canvas.height = window.innerHeight
-    canvas.width = window.innerWidth / 2
+    canvas.width = window.innerWidth * 6 / 10
     ctx = canvas.getContext("2d");
     ctx.translate(wm(500), hm(300));
     for (let depth = 20; depth >= 1; depth--) {
