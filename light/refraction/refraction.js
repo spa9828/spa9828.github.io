@@ -1,5 +1,3 @@
-function start() {
-}
 let canvas, ctx
 function hm(i) {
     return Math.ceil((canvas.height / 1000) * i);
@@ -21,12 +19,14 @@ addEventListener("load", () => {
 	canvas.width = window.innerWidth * 7 / 10
 	ctx = canvas.getContext("2d")
 	ctx.lineWidth = hm(2)
+	checkbox = document.getElementById("full")
 	draw()
 })
 let timer = 0
+let checkbox
 function draw() {
 	if (timer == 0) {
-		waves.push(new SimpleWavefront([wm(100), hm(150)], [wm(300), hm(50)]))
+		waves.push(checkbox.checked?new SimpleWavefront([wm(-100), hm(-150)], [wm(1300), hm(-500)]):new SimpleWavefront([wm(100), hm(150)], [wm(300), hm(50)]))
 	}
 	timer = (timer + 1) % 50
 	ctx.clearRect(0, 0, wm(1000), hm(1000))
