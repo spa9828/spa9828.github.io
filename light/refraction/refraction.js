@@ -18,10 +18,7 @@ let waves = []
 addEventListener("load", () => {
 	canvas = document.getElementById("canvas")
 	canvas.height = window.innerHeight * 19 / 20
-	canvas.width = Math.max(1001, window.innerWidth * 7 / 10)
-	if (canvas.width <= 1001) {
-		alert("Screen too small, angles won't work properly")
-	}
+	canvas.width = window.innerWidth * 7 / 10
 	ctx = canvas.getContext("2d")
 	ctx.lineWidth = hm(2)
 	draw()
@@ -43,9 +40,9 @@ function draw() {
 
 function getSpeed(x, y) {
 	if (y > hm(400) && y <= hm(750)) {
-		return wm(0.5)
+		return Math.max(wm(0.5), wm(1000)/canvas.width)
 	}
-	return wm(1)
+	return Math.max(wm(1), wm(2000)/canvas.width)
 }
 
 class Wavefront {} 
