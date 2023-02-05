@@ -18,10 +18,9 @@ let waves = []
 addEventListener("load", () => {
 	canvas = document.getElementById("canvas")
 	canvas.height = window.innerHeight * 19 / 20
-	canvas.width = window.innerWidth * 7 / 10
-	if (canvas.width <= 1000) {
-		alert("Screen too small")
-		return
+	canvas.width = Math.max(1001, window.innerWidth * 7 / 10)
+	if (canvas.width <= 1001) {
+		alert("Screen too small, angles won't work properly")
 	}
 	ctx = canvas.getContext("2d")
 	ctx.lineWidth = hm(2)
