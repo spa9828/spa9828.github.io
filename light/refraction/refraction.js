@@ -19,6 +19,10 @@ addEventListener("load", () => {
 	canvas = document.getElementById("canvas")
 	canvas.height = window.innerHeight * 19 / 20
 	canvas.width = window.innerWidth * 7 / 10
+	if (canvas.width <= 1000) {
+		alert("Screen too small")
+		return
+	}
 	ctx = canvas.getContext("2d")
 	ctx.lineWidth = hm(2)
 	draw()
